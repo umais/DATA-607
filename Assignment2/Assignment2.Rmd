@@ -7,11 +7,26 @@ output:
   html_document: default
 ---
 
+Git hub : https://github.com/umais/DATA-607/tree/master/Assignment2"
+
+Rpub : http://rpubs.com/umais/305818"
+
+#Movies Database
+
+This R Markdown is written to work with the MYSQL Movies database. The SQL file can be viewed from the githib link below.  
+
+Th database that is created has three tables . RecentMovies, Person and PersonMovieRating. RecentMovies will store the movie information for the recent movies. The PErson table stores all the people that were surveyed to rate the movie. The PersonMovieRating stores the ratings that were collected by the people in the person table. We will be joining these tables and gathering this information in one select query and then loading it in to a R data frame.
+
+
+
+
 ```{r setup, include=FALSE}
+
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ##Step 1 Load the R MYSQL Library
 ```{r}
+
 library(RMySQL)
 ```
 

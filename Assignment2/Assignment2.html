@@ -123,6 +123,12 @@ $(document).ready(function () {
 </div>
 
 
+<p><a href="https://github.com/umais/DATA-607/tree/master/Assignment2" target="_blank">Link to Github Repo</a></p>
+<p><a href="http://rpubs.com/umais/305818" target="_blank">Link to R pub document</a></p>
+<div id="movies-database" class="section level1">
+<h1>Movies Database</h1>
+<p>This R Markdown is written to work with the MYSQL Movies database. The SQL file can be viewed from the githib link below.</p>
+<p>Th database that is created has three tables . RecentMovies, Person and PersonMovieRating. RecentMovies will store the movie information for the recent movies. The PErson table stores all the people that were surveyed to rate the movie. The PersonMovieRating stores the ratings that were collected by the people in the person table. We will be joining these tables and gathering this information in one select query and then loading it in to a R data frame.</p>
 <div id="step-1-load-the-r-mysql-library" class="section level2">
 <h2>Step 1 Load the R MYSQL Library</h2>
 <pre class="r"><code>library(RMySQL)</code></pre>
@@ -130,7 +136,8 @@ $(document).ready(function () {
 </div>
 <div id="step-2-connect-to-the-mysql-movies-database" class="section level2">
 <h2>Step 2 Connect to the MySQL Movies database</h2>
-<pre><code> In this step we will be connecting to the Movies database and retrieving the information that was collected in the survey and loading that in the R Data Frame</code></pre>
+<pre><code> In this step we will be connecting to the Movies database and retrieving the information that
+ was collected in the survey and load that in the R Data Frame</code></pre>
 <pre class="r"><code>mydb = dbConnect(MySQL(), user='root', password='Welcome@1', dbname='movies', host='localhost')
 
 rs = dbSendQuery(mydb, &quot;SELECT m.MovieName,p.FirstName,p.LastName,r.Rating 
@@ -142,8 +149,8 @@ ON r.personID=p.personid;&quot;)</code></pre>
 ## numeric</code></pre>
 <pre class="r"><code>df=fetch(rs, n=-1)</code></pre>
 </div>
-<div id="step-3-show-the-first-few-rows-of-the-results-gathered." class="section level2">
-<h2>Step 3 Show the first few rows of the results gathered.</h2>
+<div id="step-3-show-the-first-few-rows-using-the-head-function-and-show-the-summary-of-the-ratings." class="section level2">
+<h2>Step 3 Show the first few rows using the head function and show the summary of the ratings.</h2>
 <pre class="r"><code>head(df)</code></pre>
 <pre><code>##   MovieName FirstName LastName Rating
 ## 1   Get Out    Mussab    Aftab    3.0
@@ -155,6 +162,7 @@ ON r.personID=p.personid;&quot;)</code></pre>
 <pre class="r"><code>summary(df$Rating)</code></pre>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##   2.000   2.000   3.250   3.429   5.000   5.000</code></pre>
+</div>
 </div>
 
 
