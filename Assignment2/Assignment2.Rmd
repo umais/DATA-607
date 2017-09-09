@@ -1,0 +1,38 @@
+---
+title: "Assignment 2"
+author: "Umais Siddiqui"
+date: "September 4, 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+##Step 1 Load the R MYSQL Library
+```{r}
+library(RMySQL)
+```
+
+##Step 2 Connect to the MySQL Movies database 
+
+     In this step we will be connecting to the Movies database and retrieving the information that
+     was collected in the survey and load that in the R Data Frame
+```{r }
+mydb = dbConnect(MySQL(), user='root', password='Welcome@1', dbname='movies', host='localhost')
+
+rs = dbSendQuery(mydb, "SELECT m.MovieName,p.FirstName,p.LastName,r.Rating 
+FROM PersonMovieRating r INNER JOIN RecentMovie m 
+on r.MovieId=m.MovieId
+INNER JOIN Person p
+ON r.personID=p.personid;")
+
+df=fetch(rs, n=-1)
+```
+
+##Step 3 Show the first few rows using the head function and show the summary of the ratings.
+```{r}
+head(df)
+summary(df$Rating)
+```
