@@ -1,0 +1,223 @@
+---
+title: "Data-607 Assignment 3"
+author: "Umais Siddiqui"
+date: "September 16, 2017"
+output: html_document
+---
+Github link:
+Git hub : <a href="https://github.com/umais/DATA-607/tree/master/Assignment3" target="_blank"> Github link assignment 3</a>
+RPub Link:<a href="http://rpubs.com/umais/data607_Assignment3">Rpub link</a>
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# load packages
+library(stringr)
+library(XML)
+library(RCurl)
+library(tau)
+```
+
+##Chapter 8: Regular Expressions and Essential String Functions
+
+In this assignment we will be exploring the use of regular expressions so that we are able to extract useful information and also be able to manipulate data by making use of other useful string functions.
+
+###Question 3: Copy the introductory example. The vector name Stores the exracted names
+
+```{r}
+# First we create a variable that stores the raw data
+raw.data <- "555-1239Moe Szyslak(636) 555-0113Burns, C. Montgomery555-6542Rev. Timothy Lovejoy555 8904Ned Flanders636-555-3226Simpson, Homer5543642Dr. Julius Hibbert"
+
+# Extract information
+
+
+name <- unlist(str_extract_all(raw.data, "[[:alpha:]., ]{2,}"))
+name
+
+```
+
+####(a) Use the tools of this chapter to rearrange the vector so that all elements conform to the standard first_name last_name.
+
+
+
+```{r}
+#In this step we will be spliting the names by using a comma as a delimiter.
+names<-str_split(name,"(\\,)")
+names
+
+```
+
+####In this step we are basically defining a function that will produce the names in the format first_name last_name by using the tools provided in the Chapter.
+
+```{r}
+
+getFirstNamesLastNames=function()
+{
+#Initializing a Vector to store FirstName LastName
+FirstNamesLastNames=c()
+#Looping through the names vector to search for names that are not in correct format
+for(i in 1:length(names))
+{
+  
+ len= length(names[[i]])
+ 
+ #if length of the vector item is greater than 1 then the name needs to be rearranged
+  if(len>1)
+  {
+    fullName=rev(names[[i]])
+    #Rearranging the name and massaging the data
+    FirstNamesLastNames[i]=str_trim(str_c(str_extract(fullName[1],"[:alpha:]+")," ",fullName[2]))
+  }
+ else{
+   #These names are already in correct order but we are replacing the extraneous characters.
+     FirstNamesLastNames[i]=str_trim(str_replace(names[[i]],pattern="[:alpha:]+\\.",replacement=""))
+ }
+}
+# At this point the names are in correct format so we could return them 
+return(FirstNamesLastNames)
+}
+
+```
+
+####Now calling the function getFirstNamesLastNames() and displaying the results
+```{r}
+listOfFirstNameLastNames=getFirstNamesLastNames();
+listOfFirstNameLastNames
+
+```
+
+####(b) Construct a logical vector indicating whether a character has a title . (i.e Rev. and Dr. )
+
+####Answer: We can make use of the function str_detect from the chapter that will detect the pattern and construct a logical vector and then print out the names of the actors that meet the criteria.
+
+```{r}
+#Constructing the logical vector and then printing it out.
+IsTitleVector=str_detect(name, "[:alpha:]{2,}\\.")
+IsTitleVector
+name[IsTitleVector]
+```
+
+
+####(c) Construct a logical vector indicating whether a character has a middle name.
+
+####Answer: Same as part b we can construct the logical vector using the str_detect function and then print out the logical vector as well as the names that conform to the logical vector.
+
+```{r}
+IsInitialVector=str_detect(name, "[:space:][:alpha:]\\.")
+IsInitialVector
+name[IsInitialVector]
+```
+
+###Question 4: Describe the types of strings that conform to the following regular expressions and construct an example that is matched by the regular expression.
+
+####(a)[0-9]+\\$
+
+ In the following regular expression it is expected to match one or more digits and then followed by exactly  "$" sign
+ 
+
+ 
+```{r}
+ #Will Conform
+ sample <- "12345$"  
+regex = "[0-9]+\\$"
+str_extract(sample, regex)
+
+#Will not conform
+sample <- "34567a$"  
+str_extract(sample, regex)
+ 
+```
+
+ 
+ 
+
+####(b) "\\b[a-z]{1,4}\\b"
+This regex will extract the first four lower case letters of the word
+
+```{r}
+ #Will Conform
+ sample <- "abcd efgh"  
+regex = "\\b[a-z]{1,4}\\b"
+str_extract(sample, regex)
+
+ sample <- "abCD efgh"  
+ 
+ str_extract(sample, regex)
+ 
+```
+
+
+####(c)".*?\\.txt$"
+This regular expression will return the .txt and anything that is preceding .txt string. .txt must be the last part of the string.
+
+
+```{r}
+ #Will Conform
+ sample <- "Address.txt"  
+regex = ".*?\\.txt$"
+str_extract(sample, regex)
+
+ #Will Not Conform
+ sample <- "address.txtabcdef"  
+ 
+ str_extract(sample, regex)
+ #Will Not Conform
+  sample <- "address.csv"  
+ 
+ str_extract(sample, regex)
+ 
+```
+
+####(d) \\d{2}/\\d{2}/\\d{4}
+
+This particular regex is looking for 2 digits followed by a / and then 2 digits followed by another / then 4 digits. Basically it looks like the pattern for a date format MM/DD/YYYY or DD/MM/YYYY but any digits will conform and it does not validate a correct date.
+
+
+
+```{r}
+ #Will Conform
+ sample <- "22/10/2014"  
+regex = "\\d{2}/\\d{2}/\\d{4}"
+str_extract(sample, regex)
+
+ #Will Conform
+ sample <- "60/60/2014"  
+ 
+ str_extract(sample, regex)
+ 
+  #Will not Conform
+  sample <- "ad/23/2014"  
+ 
+ str_extract(sample, regex)
+```
+
+####(e) "<(.+?)>.+?</\\1>"
+It is basically extracting the begin an end tags like in an HTML or XML document also using a back reference to make sure that the begin and end tag match. Notice how in the first example it picks up the second tag rather than the first. In the third example there is no match because the begin and end tags do not match.
+
+```{r}
+#Conforms
+regex = "<(.+?)>.+?</\\1>" 
+sample = "<Title>Sometext</head><body>Sometext</body>"
+str_extract(sample, regex) 
+
+#coforms
+sample = "<html>Sometext</html>"
+str_extract(sample, regex) 
+
+#Does not Conform
+sample = "<html>Sometext</htm>"
+str_extract(sample, regex) 
+```
+ 
+###Question 9: The Following Code hides a secret message . Crack it with R and regular expressions. Hint: Some of the characters are more reealing than others! The Code snippet is also available in the materials at www.r-datacollection.com.
+
+####Answer: The code can be cracked by using the regex "[[:upper:].]+" which is basically looking for all uppercase letters in the code and periods. We then use unlist, paste and str_replace_all functions to convert the results retrieved from str_extract_all to a string and we can then dislay the message. So, basically we are making use of tools that were learned in Chapter 8 to crack the code.
+
+
+```{r}
+encryptedCode = "clcopCow1zmstc0d87wnkig7OvdicpNuggvhryn92Gjuwczi8hqrfpRxs5Aj5dwpn0Tanwo Uwisdij7Lj8kpf03AT5Idr3coc0bt7yczjatOaootj55t3Nj3ne6c4Sfek.r1w1YwwojigO d6vrfUrbz2.2bkAnbhzgv4R9i05zEcrop.wAgnb.SqoU65fPa1otfb7wEm24k6t3sR9zqe5 fy89n6Nd5t9kc4fE905gmc4Rgxo5nhDk!gr"
+regex = "[[:upper:].]+"
+#The cracked code is below
+str_replace_all(paste(unlist(str_extract_all(encryptedCode, regex)),collapse=""),pattern="[\\.]+",replacement=" ")
+
+
+```
+

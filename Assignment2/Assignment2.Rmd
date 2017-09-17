@@ -3,19 +3,19 @@ title: "Assignment 2"
 author: "Umais Siddiqui"
 date: "September 4, 2017"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
-Git hub : https://github.com/umais/DATA-607/tree/master/Assignment2"
+Git hub : <a href="https://github.com/umais/DATA-607/tree/master/Assignment2" target="_blank"> Github link assignment 2</a>
 
-Rpub : http://rpubs.com/umais/305818"
+Rpub : <a href="http://rpubs.com/umais/305818" target="_blank"> Rpub Link Assignment 2</a>
 
 #Movies Database
 
 This R Markdown is written to work with the MYSQL Movies database. The SQL file can be viewed from the githib link below.  
 
-Th database that is created has three tables . RecentMovies, Person and PersonMovieRating. RecentMovies will store the movie information for the recent movies. The PErson table stores all the people that were surveyed to rate the movie. The PersonMovieRating stores the ratings that were collected by the people in the person table. We will be joining these tables and gathering this information in one select query and then loading it in to a R data frame.
+Th database that is created has three tables . RecentMovies, Person and PersonMovieRating. RecentMovies will store the movie information for the recent movies. The Person table stores all the people that were surveyed to rate the movie. The PersonMovieRating stores the ratings that were collected by the people in the person table. We will be joining these tables and gathering this information in one select query and then loading it in to a R data frame.
 
 
 
