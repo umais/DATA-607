@@ -1,0 +1,176 @@
+---
+title: "Project1"
+author: "Umais Siddiqui"
+date: "September 16, 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+#Analyzing Chess Tournament data
+
+###Rubs:
+
+http://rpubs.com/umais/data607_Project1
+
+###GitHub:
+
+https://github.com/umais/DATA-607/tree/master/Project1
+
+###Requirements
+
+In this project, you're given a text file with chess tournament results where the information has some structure.  Your job is to create an R Markdown file that generates a .CSV file (that could for example be imported into a SQL database) with the following information for all of the players: 
+
+Player's Name, Player's State, Total Number of Points, Player's Pre-Rating, and Average Pre Chess Rating of Opponents For the first player, the information would be:
+
+Gary Hua, ON, 6.0, 1794, 1605 
+
+###Given
+
+A text file by the name of "tournamentinfo.txt". This tet file will contain all of the information we need to get our information. 
+
+###Approach
+
+We have to read the file clean the data, calculate the average pre ratings of the opponents and then write the results to a file. 
+
+##Solution
+
+###1) Loading the Required Libraries.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+
+We are loading the required libraries. Note that one of the libraries that I will be using is the sqldf library. The purpose of using sqldf library is so that I can use sql like queries to aggregate and construct the result set that I need at the end.
+
+```{r}
+library(stringr)
+library(sqldf)
+```
+
+###2) Setting up the column names for the tournament Data
+In this step we are setting up the columns for the Data Frame that will be read from the tournament file.
+```{r}
+tournament_fields <- c("Number", "Name", "Points", "Round1", "Round2", "Round3", "Round4", "Round5", "Round6", "Round7", "EndOfLine")
+
+```
+
+
+
+###3) Reading the text file
+
+In this step we will be reading the tournamentinfo.txt file and setting the header parameter to false since the file does not have a header . We are also going to skip 4 lines before reading the data because the data we are interested in starts after skipping four lines. The columns are seperated by a pipe '|' character that is why we supplied that as the seperator.
+```{r }
+
+tournament <- read.table("tournamentinfo.txt", header = FALSE, skip = 4, sep = "|", fill = TRUE, stringsAsFactors = FALSE, col.names = tournament_fields)
+```
+
+###4) Scrubbing file and removing the unneccesary data.
+
+In this step I am cleaing up the data so that I can just get the data I need for my analysis. As you can observe below I have taken two data frames tournament and PlayerGames.The tournament dataframe contains rows of different record types meaning that there is a row type 'A' which has the information for all the rounds and then there is row type 'B' which contains information about the players rating,state and other information. I am constructing a PlayerGames dataframe by just extracting the information about the rounds so that I can use it in my analysis further in the project.
+
+
+```{r }
+tournament <- subset(tournament, !Name == "", select = c(Number:Round7))
+PlayersGames<-subset(tournament, grepl("[:0-9:]+", Number))
+PlayersGames$Id<-PlayersGames$Number
+
+head(tournament)
+```
+
+###5) Creating a Function getRoundsData 
+getRoundsData is a function being defined to return the opponent's id for that round for all the players. I will be using this function later on to get a clean list of the id's for the players and their opponents. This will be helpful for analysis later on.
+```{r}
+getRoundsData=function(games)
+{
+  Round=c()
+for(i in 1:length(games))
+{
+  val=games[[i]][1]
+  if(is.na(val))
+    val=0
+    Round[i]=val
+
+}
+  return(Round)
+}
+```
+
+###6) Constructing the data frame Opponents 
+
+Using the function getRoundsData to populate the Opponents data frame.The purpose of Opponents data frame is to store the ratings for all the opponents of a player in all the rounds. This data frame will contain the player id as any times as the rounds that they played. In each row there will be the opponent Id and the pre rating for the opponent.
+```{r}
+
+df= data.frame(PlayersGames$Id,getRoundsData(str_extract_all(PlayersGames$Round1, "[0-9]+")))
+colnames(df)<-c("Id","OpponentsRounds")
+
+df2 = data.frame(PlayersGames$Id,getRoundsData(str_extract_all(PlayersGames$Round2, "[0-9]+")))
+colnames(df2)<-c("Id","OpponentsRounds")
+
+df3 = data.frame(PlayersGames$Id,getRoundsData(str_extract_all(PlayersGames$Round3, "[0-9]+")))
+colnames(df3)<-c("Id","OpponentsRounds")
+
+df4 = data.frame(PlayersGames$Id,getRoundsData(str_extract_all(PlayersGames$Round4, "[0-9]+")))
+colnames(df4)<-c("Id","OpponentsRounds")
+
+df5 = data.frame(PlayersGames$Id,getRoundsData(str_extract_all(PlayersGames$Round5, "[0-9]+")))
+colnames(df5)<-c("Id","OpponentsRounds")
+
+df6 = data.frame(PlayersGames$Id,getRoundsData(str_extract_all(PlayersGames$Round6, "[0-9]+")))
+colnames(df6)<-c("Id","OpponentsRounds")
+
+df7 = data.frame(PlayersGames$Id,getRoundsData(str_extract_all(PlayersGames$Round7, "[0-9]+")))
+colnames(df7)<-c("Id","OpponentsRounds")
+
+Opponents=rbind(df,df2,df3,df4,df5,df6,df7)
+head(Opponents)
+```
+
+###7) Getting the ratings data
+
+We are now extracting the record type 'B' which contains the players rating information. We will use this in the final results to get the pre rating for the player. 
+
+```{r}
+PlayersRatings<-subset(tournament, grepl("[:A-Z:]+", Number))
+PlayersRatings$State=PlayersRatings$Number
+PlayersRatings$Id=PlayersGames$Id
+head(PlayersRatings)
+```
+
+###8) Gathering the results
+
+Using sqldf package to extract the Pre Ratings for each player's opponent for all rounds played and also including the players opponent id .
+```{r}
+result1=sqldf("SELECT g.Id,r.Id as OppId,cast(trim(substr(r.Name,16,4)) as int) as Pre_Ratings
+              FROM Opponents g
+              JOIN PlayersRatings r on  cast(g.OpponentsRounds as int)=r.Id  ORDER BY g.Id ")
+
+head(result1)
+```
+
+###9) Final Results
+
+In this step we are aggregating all pre_ratings for all the player's opponents from result1 and storing that in avgRate data frame. Then we Join the PlayerGames data frame to the PlayerRatings data frame to get the Pre Rating for the player and then we join the results of that to the avgRate data frame to get the average.
+
+```{r }
+
+avgRate=sqldf("SELECT Id ,cast(ROUND(AVG(Pre_Ratings)) as int) as average_opponent FROM result1 GROUP by Id")
+#avgRate
+results <- sqldf("SELECT g.Name,r.State,g.Points,substr(r.Name,16,4) as Pre_Ratings,a.average_opponent 
+              FROM PlayersGames g
+             JOIN PlayersRatings r on  g.Id=r.Id
+              JOIN avgRate  a on g.Id=a.Id
+                 ")
+head(results)
+```
+
+###10) Writing the Results to the File
+
+Finally the results data frame contains the data we need to write to the file. In this final step we will be writing these results in to a csv file called "FinalResults.csv""
+```{r}
+write.table(results, file = "FinalResults.csv", sep = ",", row.names = FALSE)
+
+```

@@ -7,9 +7,9 @@ output:
   html_document: default
 ---
 
-Git hub : <a href="https://github.com/umais/DATA-607/tree/master/Assignment3" target="_blank"> Github link assignment 3</a>  
+Git hub : https://github.com/umais/DATA-607/tree/master/Assignment3 
 
-RPub Link:<a href="http://rpubs.com/umais/data607_Assignment3">Rpub link</a>
+RPub Link:http://rpubs.com/umais/data607_Assignment3
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 # load packages
