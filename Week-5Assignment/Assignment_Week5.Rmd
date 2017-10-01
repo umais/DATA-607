@@ -1,0 +1,79 @@
+---
+title: "Week 5 Assignment"
+author: "Umais Siddiqui"
+date: "September 30, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+library(tidyr)
+library(dplyr)
+library(RMySQL)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Rpubs Link: http://rpubs.com/umais/data607_assignment5
+
+Github Link: https://github.com/umais/DATA-607/tree/master/Week-5Assignment
+
+
+
+## Tidying and Transforming Data
+
+
+###Assignment Overview
+In this assignment we will be using the TidyR and Dplyer packages to perform some analysis on the arrival delays for two Airlines.
+
+###Data Set
+
+The data set that we will be using will be from MySQL data source. First step would be to use the RMySQL package to connect to the MySQL database and retrieve the data.
+
+
+
+```{r }
+mydb = dbConnect(MySQL(), user='root', password='Welcome@1', dbname='flights', host='localhost')
+
+rs = dbSendQuery(mydb, "SELECT * FROM AirlineArrival;")
+
+df=fetch(rs, n=-1)
+
+head(df)
+```
+
+###Using tidyR to transform the data
+
+As we can see from the results that the data set is in a wide format. What we would like to do in our first step is transform the data in to a long format so that we have the following columns Airline,ArrivalStatus,Cities, NumberOfFlights. We can achive this using the tidyR function called gather.
+
+```{r}
+#Gather Function from tidyR
+airlines2<- gather(df,Cities,NumberOfFlights,LosAngeles:Seattle)
+
+head(airlines2)
+```
+
+###Using Dplyer to filter results
+
+```{r}
+#Using the Filter Function from DPlyer
+delayedFlights=filter(airlines2,ArrivalStatus=="Delayed")
+delayedFlights
+```
+
+
+###Using DPlyer Pipeline and summarise function in DPlyer to look at the total number of flights delayed by each airline
+
+We can see the comparison between how many flights are delayed by each ailrine
+
+```{r}
+delayedFlights %>%
+       group_by(Airline,ArrivalStatus)%>%
+       summarise(total=sum(NumberOfFlights))
+```
+
+
+
+
+
+
