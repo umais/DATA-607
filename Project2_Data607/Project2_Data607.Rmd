@@ -1,0 +1,112 @@
+---
+title: "Project2 Data 607"
+author: "Umais Siddiqui"
+date: "October 7, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+
+
+```{r setup, include=FALSE}
+library(tidyr)
+library(dplyr)
+library(RMySQL)
+library(data.table)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###Rpubs Link: http://rpubs.com/umais/data607_Project2 
+
+###Github Link: https://github.com/umais/DATA-607/tree/master/Project2_Data607
+
+#Down Stream Analysis using tidyR and Dplyer
+
+I will be using three data sets from a past projects that I worked on. One of the data sets is from the company I work for at the moment.
+
+
+##School Data Set
+1) Data set from a schools project I did for couple of schools back home. The data shows the number of students that passed and failed from 9th and  10th grade . I have deindentified the data by using fake school names
+```{r }
+mydb = dbConnect(MySQL(), user='root', password='Welcome@1', dbname='project2', host='localhost')
+
+rs = dbSendQuery(mydb, "SELECT * FROM StudentRecords;")
+
+df=fetch(rs, n=-1)
+
+head(df)
+```
+
+###Summarise the Data in to total Passed and Failed from each school
+```{r}
+#Gather Function from tidyR
+TotalStudents<- gather(df,Status,NumberOfStudents,NinthGradePass:TenthGradeFail)
+
+head(TotalStudents)
+
+failed=TotalStudents %>% dplyr::filter(Status %like% "Fail")%>%group_by(SchoolName)%>%summarise(total=sum(NumberOfStudents))
+
+failed
+
+passed=TotalStudents %>% dplyr::filter(Status %like% "Pass")%>%group_by(SchoolName)%>%summarise(total=sum(NumberOfStudents))
+
+passed
+
+
+       
+```
+
+##Second Data Set for In Network and Out of Network Providers 
+
+```{r}
+
+rs = dbSendQuery(mydb, "SELECT * FROM ProviderNetwork ;")
+
+df=fetch(rs, n=-1)
+
+head(df)
+
+TotalProviders<- gather(df,NetworkStatus,NumberOfProviders,TotalInNetworkChicago:TotalOutOfNetwork_NewYork)
+
+TotalProviders
+
+
+
+```
+
+###Check Which Health Plan has More In Network Providers from the two cities.
+
+```{r}
+InNetwork=TotalProviders %>% dplyr::filter(NetworkStatus %like% "InNetwork")%>%group_by(PayerName)%>%summarise(total=sum(NumberOfProviders))
+
+InNetwork
+
+```
+
+As we can See Payer 1 has more in network providers than payer 2.
+
+##Using the Third data set for the MemberRisk Data
+
+```{r}
+
+
+rs = dbSendQuery(mydb, "SELECT * FROM  MemberRisk ;")
+
+df=fetch(rs, n=-1)
+
+head(df)
+
+TotalMembers<- gather(df,RiskStatus,NumberOfMembers,HighRiskFlorida:LowRiskNewYork)
+
+TotalMembers
+
+HighRisk=TotalMembers %>% dplyr::filter(RiskStatus %like% "High")%>%group_by(OrganizationName)%>%summarise(total=sum(NumberOfMembers))
+
+HighRisk
+```
+
+In the last Data Set we can see that AlignCare has more High Risk Members than Demo Data Large
+
+
