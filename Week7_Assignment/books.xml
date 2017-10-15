@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<books>
+   <book >
+      <title>Agile Principles, Patterns, and Practices in C#</title>
+      <ISBN>978-0131857254</ISBN>
+       <copyright>2007</copyright>
+      <author1>Robert C. Martin</author1>
+	  <author2>Micah Martin</author2>
+      
+   </book>
+   <book >
+      <title>Dracula</title>
+      <ISBN>9780316014816</ISBN>
+      <copyright>2005</copyright>
+      <author1>William Shakespeare</author1>
+	  <author2></author2>
+   </book>
+     <book >
+	  <title>The Island of Doctor Moreau</title>
+      <ISBN>978155111327</ISBN>
+      <copyright>2009</copyright>
+      <author1>H.G. Wells</author1>
+	  <author2></author2>
+   </book>
+ </books>

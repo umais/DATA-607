@@ -1,0 +1,23 @@
+[
+  {
+    "title": "Agile Principles, Patterns, and Practices in C#",
+    "ISBN13": "978-0131857254",
+    "copyright": 2007,
+    "author1": "Robert C. Martin",
+    "author2": "Micah Martin"
+  },
+  {
+    "title": "Dracula",
+    "ISBN13": 9780316014816,
+    "copyright": 2005,
+    "author1": "William Shakespeare",
+    "author2": ""
+  },
+  {
+    "title": "The Island of Doctor Moreau",
+    "ISBN13": 978155111327,
+    "copyright": 2009,
+    "author1": "H.G. Wells",
+    "author2": ""
+  }
+]
