@@ -1,0 +1,59 @@
+---
+title: "Assignment_week9"
+author: "Umais Siddiqui"
+date: "October 29, 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+http://rpubs.com/umais/data607_week9_assignment
+
+
+# Web API's
+
+##Approach
+
+Using the jsonLite library we will be reading the JSON document from the New your times API. Once document is read we will transform the json in to a R data frame object
+
+##Reading the data
+
+After retrieving the API Key Making a call to the Ny Times Article search API to get the listing of the articles
+```{r}
+library(jsonlite)
+nytimes_articles <- fromJSON("http://developer.nytimes.com/proxy/https/api.nytimes.com/svc/search/v2/articlesearch.json?api-key=d0aaa22b5c5e46dea282c685d7ecfb07")
+
+```
+
+
+
+
+##Transforming it in to a data frame.
+
+In this step we successfully created a data frame from the JSON returned from the API call
+```{r}
+articleDf=data.frame(nytimes_articles$response$docs$pub_date)
+colnames(articleDf)<-c('publishdate')
+articleDf$type=nytimes_articles$response$docs$document_type
+articleDf$headline=nytimes_articles$response$docs$headline$main
+articleDf$source=nytimes_articles$response$docs$source
+articleDf$section_name=nytimes_articles$response$docs$section_name
+articleDf$web_url=nytimes_articles$response$docs$web_url
+
+```
+
+
+##Display the data in the data frame.
+
+```{r}
+articleDf
+
+```
+
+
+

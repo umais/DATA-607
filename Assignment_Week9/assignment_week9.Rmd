@@ -1,0 +1,13 @@
+---
+title: "Assignment_Week9"
+author: "Umais Siddiqui"
+date: "October 23, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+http://developer.nytimes.com/proxy/https/api.nytimes.com/svc/search/v2/articlesearch.json?api-key=d0aaa22b5c5e46dea282c685d7ecfb07
