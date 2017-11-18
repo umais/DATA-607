@@ -1,0 +1,54 @@
+---
+title: "Week12_Assignment"
+author: "Umais Siddiqui"
+date: "November 16, 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mongolite)
+library(RMySQL)
+```
+
+Rpubs: http://rpubs.com/umais/week12_assignment
+
+Github: 
+
+## Assignment Week 12
+
+In this assignment I will be taking data from a relational database and migrating it to MongoDB database that is set up on MongoLab.
+The data set that I have chosen is from Project 3 . I am going to retrieve the Job Title, Job Location and Skill Name from the Normalized tables DataScienceJob and DataScienceSkills and store them in a mongo database collection called jobskills.
+
+### Reading the Data from MySQL database and migrating it to MongoDB No SQL Storage
+
+In this step I will be using the RMySQL library to connect to MySQL data store and retrieve the Skills data. I will then connect to the MongoDB database called openletter on MongoLab and Insert the Skill data reteived from MySQL in the collection called jobskills.
+
+```{r}
+my_collection = mongo(collection = "jobskills", url = "mongodb://ruser:Tw1stone23@ds031618.mlab.com:31618/openletter")
+mydb = dbConnect(MySQL(), user='root', password='Welcome@1', dbname='project3', host='localhost')
+
+results = dbSendQuery(mydb, "SELECT j.JobTitle,j.JobLocation,s.SkillName FROM DataScienceJobs j INNER JOIN DataScienceSkills s ON j.JobId=s.JobId  ;")
+
+jobSkills=fetch(results, n=-1)
+my_collection$drop()
+my_collection$insert(jobSkills)
+head(jobSkills)
+
+```
+
+### Reading data from the MongoDB collection to ensure it got Saved correctly.
+
+```{r}
+alldata <- my_collection$find('{}')
+head(alldata)
+
+```
+
+### Pros and Cons of Storing data in Relational DB vs NoSQL
+
+1) The advanatage of storing data in a relational database is that data can be stored in a relational manner that is good for data integrity and elimnates alot of anomolies.
+2) The advantage of storing data in a NoSQL store is that it is easier to retrieve and the data access is faster as the data is stored in a manner of document.
+
