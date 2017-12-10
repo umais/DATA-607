@@ -1,10 +1,10 @@
 ---
-title: "Week12_Assignment"
+title: "Week12 Assignment"
 author: "Umais Siddiqui"
 date: "November 16, 2017"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +15,7 @@ library(RMySQL)
 
 Rpubs: http://rpubs.com/umais/week12_assignment
 
-Github: 
+Github: https://github.com/umais/DATA-607/tree/master/Week12_Assignment
 
 ## Assignment Week 12
 

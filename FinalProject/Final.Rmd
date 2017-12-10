@@ -1,0 +1,261 @@
+---
+title: "Final Project"
+author: "Umais Siddiqui"
+date: "December 8, 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(RMySQL)
+library(lattice)
+
+```
+
+## Final Project
+
+
+Rpubs Link: http://rpubs.com/umais/data607-FinalProject
+
+Github Link: https://github.com/umais/DATA-607/tree/master/FinalProject
+
+###Overview 
+
+In this Project I will be analyzing a subset of dummy patients and associated pharmacy data retrieved from files in to a MYSQL Data store . All of this data is de identified data so nothing in this data identifies real patient data. One of my data sources will be csv file that I will be retrieving from a third party software called John Hopkins ACG System.
+
+The purpose of the project is to use the Pharmacy data to determine the Health Risk of Patients and also determine what conditions the patients have based on the drugs being taken. Any company that deals with patients whether it is doctors, health insurance companies or Care Organizations can use this type of analysis to detemine which patients to focus their care coordination efforts on.
+
+
+###Loading the Data in to MySQL from Patient.csv and Pharmacy.csv
+
+I have set the eval value of the below r code to false as the below script is executed from a r Script file which is also a part of this final project. What this code is doing is a one time dump in to My Sql Tables Patient and Pharmacy from the CSV files which can also be found in the inputfiles directory.
+
+```{r, eval=FALSE}
+library(RMySQL)
+library(lubridate)
+
+killDbConnections <- function () {
+  
+  all_cons <- dbListConnections(MySQL())
+  
+  print(all_cons)
+  
+  for(con in all_cons)
+    +  dbDisconnect(con)
+  
+  print(paste(length(all_cons), " connections killed."))
+  
+}
+
+killDbConnections()
+
+mydb = dbConnect(MySQL(), user='root', password='Welcome@1', dbname='finalproject', host='localhost')
+
+Patient <- read.csv("inputFiles/patients.csv", header = TRUE,sep=",")
+
+Patient$DOB<-as.Date(parse_date_time(Patient$DOB,"mdy"))
+
+head(Patient)
+
+dbWriteTable(mydb, "patient", Patient, overwrite=FALSE,append=TRUE,row.names=FALSE)
+Pharmacy <- read.csv("inputFiles/pharmacy.csv", header = TRUE,sep=",")
+
+Pharmacy$FillDate<-as.Date(parse_date_time(Pharmacy$FillDate,"mdy"))
+
+head(Pharmacy)
+
+dbWriteTable(mydb, "prescriptionfillhistory", Pharmacy, overwrite=FALSE,append=TRUE,row.names=FALSE)
+
+```
+
+###Selecting the Patient Data and Pharmacy Data loaded
+
+In the Code below we will verify that the data loaded sucessfully and we can view the records in the tables.
+
+```{r}
+mydb = dbConnect(MySQL(), user='root', password='Welcome@1', dbname='finalproject', host='localhost')
+rs = dbSendQuery(mydb, "SELECT * FROM patient;")
+
+PatientData=fetch(rs, n=-1)
+
+head(PatientData)
+
+rs = dbSendQuery(mydb, "SELECT * FROM PrescriptionFillHistory;")
+
+PrescriptionHistory=fetch(rs, n=-1)
+
+head(PrescriptionHistory)
+
+
+
+```
+
+###Loading the ACG data from ACG  output File
+
+John Hopkins ACG takes two files as input the patient File and the Pharmacy File. The Pharmacy file is optional but it is required for the purposes of this project. John Hopkins ACG Software processes these two files and then produces two output files one file is the ACG output file and the other one is ACG Conditions File. We will be now analyzing the output that was produced by ACG
+
+```{r}
+PatientACG <- read.csv("inputFiles/ACGOutput.acgd.csv", header = TRUE,sep=",")
+
+head(PatientACG$rescaled_pharmacy_cost_predicted_risk)
+
+```
+
+
+In the data returned by John Hopkins ACG Software I will be looking at the column rescaled_pharmacy_cost_predicted_risk. I will calculate the mean and Standard Deviation for this column so that I can use that to place the patients in different categories whether they are very low risk, low risk, medium risk , High Risk or Very High Risk.
+
+What I will do here is use my own algorithm to calculate the Risk Level for a patient. As Per John Hopkins ACG software the Mean of the Rescaled Pharmacy cost is 1. So if the value is 1 in this column that means this is how much an average patient will cost based on the drugs they are taking. 
+
+The algorithm is below
+
+if a patient cost is 0.5 then I am categorizing them as very low (1).
+
+If the patient is greater than 0.5 but less than equal to the mean 1 then they are low risk (2).
+
+If the patient cost is the mean + standard deviation then they are Medium Risk (3)
+
+If the patient cost index is mean plus standard deviation multiply by 3 then they are High Risk 
+
+Finally if they are higher than that then they are very risky.
+
+```{r}
+
+CalculateRiskLevel <- function(predictedCost,mean,sdvcost)
+{
+  if(predictedCost<0.5)
+   return(1)
+  if(predictedCost<=1)
+    return(2)
+  if(predictedCost<=mean+sdvcost)
+    return(3)
+  if(predictedCost<=(mean+(sdvcost*3)))
+    return(4)
+  else
+    return(5)
+}
+Mean<-mean(PatientACG$rescaled_pharmacy_cost_predicted_risk)
+
+SDVCost<-sd(PatientACG$rescaled_pharmacy_cost_predicted_risk)
+
+Mean
+
+SDVCost
+
+PatientACG$RiskLevel= sapply(PatientACG$rescaled_pharmacy_cost_predicted_risk, CalculateRiskLevel,Mean,SDVCost)
+
+head(PatientACG$RiskLevel)
+```
+
+
+###Histogram of the Risk Level
+
+```{r}
+hist(PatientACG$RiskLevel, col="darkgreen")
+
+xyplot(RiskLevel ~ age, data = PatientACG,
+  xlab = "Age",
+  ylab = "Risk Level",
+  main = "Relationship between age and Risk Level")
+
+```
+
+
+```{r}
+dotplot(RiskLevel ~ age, data = PatientACG, groups = RiskLevel, type = "o",
+auto.key = list(space = "right", points = TRUE, lines = TRUE))
+
+```
+
+##Barchart Showing Counts of different Risk Levels
+
+In the below code we will be creating counts of the population categorizing them in different buckets from Risk Level very low to Very High
+
+```{r}
+
+colours <- c("grey", "green", "yellow", "orange", "red")
+
+VeryLow = nrow(subset(PatientACG, RiskLevel==1)) 
+Low = nrow(subset(PatientACG, RiskLevel==2)) 
+Medium = nrow(subset(PatientACG, RiskLevel==3)) 
+High = nrow(subset(PatientACG, RiskLevel==4)) 
+VeryHigh = nrow(subset(PatientACG, RiskLevel==5)) 
+t=data.frame(VeryLow,Low,Medium,High,VeryHigh)
+t
+barplot(as.matrix(t), main="My Barchart", ylab = "Population", beside=TRUE, col=colours)
+```
+
+
+We can see based on the above results that there are very few patients that are in the Very High category. This will narrow down the population that care coordination organizations have to focus on.
+
+##Now Loading the ACG Conditions File based on NDC code from Pharmacy File.
+
+```{r}
+PatientConditions <- read.csv("inputFiles/ACG_Conditions.csv", header = TRUE,sep=",")
+
+head(PatientConditions)
+
+
+```
+
+As we can see that John Hopkins ACG software also produced result that can help tell us what conditions a patient has. Out of these conditions I would like to analyze the data for some conditions such as High Blood Pressure and Diabetes without Insulin. 
+
+The RxMGCode is a proprietry code from John Hopkins that is used to identify a co-morbidity (condition). In order to analyze the conditions I mentioned above I will be using the RxMG Code associated with those two conditions.
+
+
+The two RxMG Codes of interest are CARx030 and ENDx040
+
+
+```{r}
+HighBloodPressure = subset(PatientConditions, rxmg_code=="CARx030")
+DiabetesWithoutInsulin= subset(PatientConditions, rxmg_code=="ENDx040")
+
+head(HighBloodPressure)
+head(DiabetesWithoutInsulin)
+
+colours <- c("red","yellow")
+totalHighBloodPressure=nrow(HighBloodPressure)
+
+totalDiabetesWithoutInsulin=nrow(DiabetesWithoutInsulin)
+
+data=data.frame(totalHighBloodPressure,totalDiabetesWithoutInsulin)
+barplot(as.matrix(data), main="Barchart Showing High Blood Pressure and DIabetes Patients", ylab = "Population", beside=TRUE, col=colours)
+
+```
+
+
+###Doing some more analysis
+
+I want to do some further analysis based on the gender of the patient the risk level
+
+```{r}
+
+mosaicplot(table(PatientACG$sex,PatientACG$RiskLevel))
+
+```
+
+We can see the distribution of the Female and male in different Risk levels
+
+One more thing I want to check is what percentage of female out of the population are at high risk versus the male.
+
+```{r}
+TotalPatients=nrow(PatientACG)
+
+totalFemaleHighRisk=nrow(subset(PatientACG,sex=="F" & RiskLevel==5))
+totalMaleHighRisk=nrow(subset(PatientACG,sex=="M" & RiskLevel==5))
+totalFemaleHighRisk
+totalMaleHighRisk
+
+
+print(paste("Percentage of Male with High Risk" , (totalMaleHighRisk/TotalPatients)*100.0))
+
+print(paste("Percentage of Female with High Risk" , (totalFemaleHighRisk/TotalPatients)*100))
+```
+
+
+###Conclusion
+
+We can see based on the results that we can use the pharmacy data to determine the Risk Level of the Patients as well as see what Implied conditions they may have based on the drugs being taken. This is a very helpful way to get an insight in to what the patients condition is.
+
+We can take this a step further and try to determine the gaps in prescription fills of the patients and see if they are being adherent in filling there prescriptions. We will not be doing that in this project but I think it is something worth looking in to for future Projects.
